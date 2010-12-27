@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jindo.jindolib &mdash; Jindo v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Jindo v0.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">Jindo v0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jindo.jindolib</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">simplejson</span> <span class="kn">as</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">httplib</span>
+
+<span class="kn">from</span> <span class="nn">jindo.utils</span> <span class="kn">import</span> <span class="n">camel_to_human</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd">jindolib.py</span>
+<span class="sd">==========</span>
+
+<span class="sd">Desc: Library for (mt) Media Temple&#39;s API</span>
+
+
+<span class="sd">Author: Rob Cakebread &lt;cakebread a t gmail d0t c0m&gt;</span>
+
+<span class="sd">License  : BSD</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&#39;restructuredtext&#39;</span>
+
+<span class="n">RESPONSE_CODES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">200</span><span class="p">:</span> <span class="s">&#39;Success&#39;</span><span class="p">,</span>
+        <span class="mi">201</span><span class="p">:</span> <span class="s">&#39;Successfully Created&#39;</span><span class="p">,</span>
+        <span class="mi">202</span><span class="p">:</span> <span class="s">&#39;Request accepted but not yet processed&#39;</span><span class="p">,</span>
+        <span class="mi">400</span><span class="p">:</span> <span class="s">&#39;There was an error in the request input&#39;</span><span class="p">,</span>
+        <span class="mi">401</span><span class="p">:</span> <span class="s">&#39;Not Authorized. The authenticated user does not have permission to perform the operation&#39;</span><span class="p">,</span>
+        <span class="mi">402</span><span class="p">:</span> <span class="s">&#39;Permission Denied. The specified credentials are invalid&#39;</span><span class="p">,</span>
+        <span class="mi">404</span><span class="p">:</span> <span class="s">&#39;The specified resource was not found&#39;</span><span class="p">,</span>
+        <span class="mi">409</span><span class="p">:</span> <span class="s">&#39;The specified operation is already in progress.&#39;</span><span class="p">,</span>
+        <span class="mi">500</span><span class="p">:</span> <span class="s">&#39;Internal Server Error&#39;</span><span class="p">,</span>
+        <span class="mi">503</span><span class="p">:</span> <span class="s">&#39;Service Unavailable&#39;</span>
+<span class="p">}</span>
+
+<span class="n">RESPONSE_KEYS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s">&#39;statusCode&#39;</span><span class="p">,</span>
+        <span class="s">&#39;timeStamp&#39;</span><span class="p">,</span>
+        <span class="s">&#39;date&#39;</span><span class="p">,</span>
+        <span class="s">&#39;errors&#39;</span><span class="p">,</span>
+        <span class="s">&#39;custom&#39;</span>
+<span class="p">]</span>
+
+<span class="n">SERVICE_KEYS</span><span class="o">=</span> <span class="p">[</span><span class="s">&#39;accessDomain&#39;</span><span class="p">,</span>
+        <span class="s">&#39;addons&#39;</span><span class="p">,</span>
+        <span class="s">&#39;billingStatus&#39;</span><span class="p">,</span>
+        <span class="s">&#39;billingStatusText&#39;</span><span class="p">,</span>
+        <span class="s">&#39;hostServer&#39;</span><span class="p">,</span>
+        <span class="s">&#39;ipAddresses&#39;</span><span class="p">,</span>
+        <span class="s">&#39;operatingSystem&#39;</span><span class="p">,</span>
+        <span class="s">&#39;operatingSystemName&#39;</span><span class="p">,</span>
+        <span class="s">&#39;primaryDomain&#39;</span><span class="p">,</span>
+        <span class="s">&#39;serviceType&#39;</span><span class="p">,</span>
+        <span class="s">&#39;serviceTypeName&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">print_service_details</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;text&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="print_service_details"><a class="viewcode-back" href="../../index.html#jindo.jindolib.print_service_details">[docs]</a>    <span class="sd">&#39;&#39;&#39;Print details of a service&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;json&#39;</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">json_data</span>
+        <span class="k">return</span>
+    <span class="k">elif</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;text&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">SERVICE_KEYS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;ipAddresses&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">camel_to_human</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span>
+                <span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;service&#39;</span><span class="p">][</span><span class="s">&#39;ipAddresses&#39;</span><span class="p">]:</span>
+                    <span class="k">print</span> <span class="s">&quot;    &quot;</span> <span class="o">+</span> <span class="n">ip</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;addons&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">camel_to_human</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span>
+                <span class="k">for</span> <span class="n">addon</span> <span class="ow">in</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;service&#39;</span><span class="p">][</span><span class="s">&#39;addons&#39;</span><span class="p">]:</span>
+                    <span class="k">print</span> <span class="s">&quot;    &quot;</span> <span class="o">+</span> <span class="n">addon</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;billingStatus&#39;</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;serviceType&#39;</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;operatingSystem&#39;</span><span class="p">:</span>
+                <span class="c">#These are integers, we use the text instead</span>
+                <span class="c">#Maybe show it if verbose?</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;service&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                    <span class="k">print</span> <span class="n">camel_to_human</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span>
+                    <span class="k">print</span> <span class="s">&#39;    &#39;</span> <span class="o">+</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;service&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c">#We are skipping a field that doesn&#39;t apply, such as</span>
+                    <span class="c">#alternateDomain for a (dv) Dedicated-Virtual Server</span>
+                    <span class="c">#DEBUG</span>
+                    <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Error: No such format: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">format</span>
+
+<span class="k">def</span> <span class="nf">print_response_details</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;text&#39;</span><span class="p">):</span></div>
+<div class="viewcode-block" id="print_response_details"><a class="viewcode-back" href="../../index.html#jindo.jindolib.print_response_details">[docs]</a>    <span class="sd">&#39;&#39;&#39;Prints the response all pretty like&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;json&#39;</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">json_data</span>
+        <span class="k">return</span>
+    <span class="k">elif</span> <span class="n">format</span> <span class="o">==</span> <span class="s">&#39;text&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">RESPONSE_KEYS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;statusCode&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">camel_to_human</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span> 
+                <span class="k">print</span> <span class="s">&quot;    &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">json_data</span><span class="p">[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="n">RESPONSE_CODES</span><span class="p">[</span><span class="n">json_data</span><span class="p">[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]]</span>
+            
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;timeStamp&#39;</span><span class="p">:</span>
+                <span class="k">pass</span>
+            
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;errors&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">camel_to_human</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span>
+                <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="s">&#39;errors&#39;</span><span class="p">]:</span>
+                    <span class="k">print</span> <span class="s">&quot;    &quot;</span> <span class="o">+</span> <span class="n">error</span><span class="p">[</span><span class="s">&#39;message&#39;</span><span class="p">]</span>
+            
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s">&#39;custom&#39;</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]:</span>
+                    <span class="k">print</span> <span class="n">camel_to_human</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">+</span> <span class="s">&quot;:&quot;</span>
+                    <span class="k">print</span> <span class="s">&#39;    &#39;</span> <span class="o">+</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;response&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Error: No such format: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">format</span>
+
+<span class="k">def</span> <span class="nf">add_temp_diskspace</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">api_key</span><span class="p">):</span></div>
+<div class="viewcode-block" id="add_temp_diskspace"><a class="viewcode-back" href="../../index.html#jindo.jindolib.add_temp_diskspace">[docs]</a>    <span class="sd">&#39;&#39;&#39;Adds 1 GB temporary disk space for 6 hours&#39;&#39;&#39;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPSConnection</span><span class="p">(</span><span class="s">&quot;api.mediatemple.net&quot;</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;POST&quot;</span><span class="p">,</span> <span class="s">&quot;/api/v1/services/</span><span class="si">%s</span><span class="s">/disk/temp.json?apikey=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">api_key</span><span class="p">))</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">403</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;The service may not be associated with this API key.&quot;</span>
+        <span class="c">#Blah blah, exception handling, blah blah, refactor code</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json_data</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+
+<span class="k">def</span> <span class="nf">reboot_server</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">api_key</span><span class="p">):</span></div>
+<div class="viewcode-block" id="reboot_server"><a class="viewcode-back" href="../../index.html#jindo.jindolib.reboot_server">[docs]</a>    <span class="sd">&#39;&#39;&#39;Reboots your server. Returns response if successful&#39;&#39;&#39;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPSConnection</span><span class="p">(</span><span class="s">&quot;api.mediatemple.net&quot;</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;POST&quot;</span><span class="p">,</span> <span class="s">&quot;/api/v1/services/</span><span class="si">%s</span><span class="s">/reboot.json?apikey=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">api_key</span><span class="p">))</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    
+    <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">403</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;The service may not be associated with this API key.&quot;</span>
+        <span class="c">#He&#39;ll work on exception handling when he refactors the httplib code</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json_data</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+
+<span class="k">def</span> <span class="nf">fetch_services</span><span class="p">(</span><span class="n">api_key</span><span class="p">):</span></div>
+<div class="viewcode-block" id="fetch_services"><a class="viewcode-back" href="../../index.html#jindo.jindolib.fetch_services">[docs]</a>    <span class="sd">&#39;&#39;&#39;Returns list of services associated with an account&#39;&#39;&#39;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPSConnection</span><span class="p">(</span><span class="s">&quot;api.mediatemple.net&quot;</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;GET&quot;</span><span class="p">,</span> <span class="s">&quot;/api/v1/services/ids.json?apikey=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">api_key</span><span class="p">)</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;serviceIds&#39;</span><span class="p">):</span>
+        <span class="k">print</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">403</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;The service may not be associated with this API key.&quot;</span>
+        <span class="c">#I&#39;ll work on exception handling when I refactor the httplib code</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json_data</span><span class="p">[</span><span class="s">&#39;serviceIds&#39;</span><span class="p">],</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+
+<span class="k">def</span> <span class="nf">fetch_service_details</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span></div>
+<div class="viewcode-block" id="fetch_service_details"><a class="viewcode-back" href="../../index.html#jindo.jindolib.fetch_service_details">[docs]</a>    <span class="sd">&#39;&#39;&#39;Returns &#39;&#39;&#39;</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">httplib</span><span class="o">.</span><span class="n">HTTPSConnection</span><span class="p">(</span><span class="s">&quot;api.mediatemple.net&quot;</span><span class="p">)</span>
+    <span class="n">c</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s">&quot;GET&quot;</span><span class="p">,</span> <span class="s">&quot;/api/v1/services/</span><span class="si">%s</span><span class="s">.json?apikey=</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="n">api_key</span><span class="p">))</span>
+
+    <span class="n">response</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">getresponse</span><span class="p">()</span>
+    <span class="n">json_data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_data</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;service&#39;</span><span class="p">):</span>
+        <span class="k">print</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">403</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&quot;The service may not be associated with this API key.&quot;</span>
+        <span class="c">#I&#39;ll work on exception handling when I refactor the httplib code</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+    <span class="k">return</span> <span class="n">json_data</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">reason</span>
+
+<span class="k">def</span> <span class="nf">parse_service</span><span class="p">(</span><span class="n">json_data</span><span class="p">):</span></div>
+<div class="viewcode-block" id="parse_service"><a class="viewcode-back" href="../../index.html#jindo.jindolib.parse_service">[docs]</a>    <span class="sd">&#39;&#39;&#39;Parses a service&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_data</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">parse_json</span><span class="p">(</span><span class="n">result</span><span class="p">):</span></div>
+<div class="viewcode-block" id="parse_json"><a class="viewcode-back" href="../../index.html#jindo.jindolib.parse_json">[docs]</a>    <span class="sd">&#39;&#39;&#39;Simply loads a string into JSON&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/mt.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">Jindo v0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Rob Cakebread.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+    </div>
+  </body>
+</html>

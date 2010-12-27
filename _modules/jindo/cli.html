@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jindo.cli &mdash; Jindo v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Jindo v0.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">Jindo v0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jindo.cli</h1><div class="highlight"><pre>
+<span class="c"># pylint: disable-msg=W0613,W0612,W0212,W0511,R0912,C0322,W0704</span>
+<span class="c"># W0511 = XXX (my own todo&#39;s)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">cli.py</span>
+<span class="sd">======</span>
+
+<span class="sd">Desc: Command-line tool for (mt) Media Temple API</span>
+
+<span class="sd">Author: Rob Cakebread &lt;rcakebread @ mediatemplet dawt net&gt;</span>
+
+<span class="sd">License : BSD</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&#39;restructuredtext&#39;</span>
+<span class="n">__revision__</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">optparse</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="c">#from jindo.jindolib import get_highest_version, Distributions</span>
+<span class="kn">from</span> <span class="nn">jindo.utils</span> <span class="kn">import</span> <span class="n">get_rc_file</span>
+<span class="kn">from</span> <span class="nn">jindo.jindolib</span> <span class="kn">import</span> <span class="n">fetch_service_details</span><span class="p">,</span> <span class="n">print_response_details</span><span class="p">,</span> <span class="n">print_service_details</span><span class="p">,</span> <span class="n">fetch_services</span><span class="p">,</span> <span class="n">reboot_server</span><span class="p">,</span> <span class="n">add_temp_diskspace</span>
+<span class="kn">from</span> <span class="nn">jindo.__init__</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">VERSION</span>
+
+
+<span class="c">#TODO: Use a real config parser</span>
+
+<div class="viewcode-block" id="Jindo"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo">[docs]</a><span class="k">class</span> <span class="nc">Jindo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Main class for jindo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Jindo.__init__"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c">#PyPI project name with proper case</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&quot;jindo&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">get_rc_file</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="Jindo.set_log_level"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.set_log_level">[docs]</a>    <span class="k">def</span> <span class="nf">set_log_level</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set log level according to command-line options</span>
+
+<span class="sd">        @returns: logger object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">quiet</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span>
+</div>
+<div class="viewcode-block" id="Jindo.get_service_details"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.get_service_details">[docs]</a>    <span class="k">def</span> <span class="nf">get_service_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return details for a specific service&#39;&#39;&#39;</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">fetch_service_details</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="c">#TODO: Raise exceptions based on code/status?</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Jindo.get_services"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.get_services">[docs]</a>    <span class="k">def</span> <span class="nf">get_services</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return list of all service ids&#39;&#39;&#39;</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">fetch_services</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="c">#TODO: Raise exceptions based on code/status?</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Jindo.reboot_server"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.reboot_server">[docs]</a>    <span class="k">def</span> <span class="nf">reboot_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Reboots server&#39;&#39;&#39;</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">reboot_server</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="c">#TODO: Raise exceptions based on code/status?</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Jindo.add_diskspace"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.add_diskspace">[docs]</a>    <span class="k">def</span> <span class="nf">add_diskspace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Adds temp disk space&#39;&#39;&#39;</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">add_temp_diskspace</span><span class="p">(</span><span class="n">service</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span>
+</div>
+<div class="viewcode-block" id="Jindo.run"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform actions based on CLI options</span>
+
+<span class="sd">        @returns: status code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">opt_parser</span> <span class="o">=</span> <span class="n">setup_opt_parser</span><span class="p">()</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">remaining_args</span><span class="p">)</span> <span class="o">=</span> <span class="n">opt_parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_log_level</span><span class="p">()</span>
+
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">remaining_args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">opt_parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+            <span class="k">return</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">service</span><span class="p">:</span>
+            <span class="n">json_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_service_details</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">service</span><span class="p">)</span>
+            <span class="n">print_service_details</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">service_ids</span><span class="p">:</span>
+            <span class="n">json_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_services</span><span class="p">()</span>
+            <span class="c">#TODO: Could be formatted better</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">format</span> <span class="o">==</span> <span class="s">&#39;text&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;Service IDs: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">json_data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">json_data</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">reboot</span><span class="p">:</span>
+            <span class="n">json_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reboot_server</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">reboot</span><span class="p">)</span>
+            <span class="n">print_response_details</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">diskspace</span><span class="p">:</span>
+            <span class="n">json_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_diskspace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">diskspace</span><span class="p">)</span>
+            <span class="n">print_response_details</span><span class="p">(</span><span class="n">json_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">opt_parser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
+            <span class="k">return</span> <span class="mi">2</span>
+</div>
+<div class="viewcode-block" id="Jindo.jindo_version"><a class="viewcode-back" href="../../index.html#jindo.cli.Jindo.jindo_version">[docs]</a>    <span class="k">def</span> <span class="nf">jindo_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show jindo&#39;s version</span>
+
+<span class="sd">        @returns: 0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;jindo version </span><span class="si">%s</span><span class="s"> (rev. </span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">VERSION</span><span class="p">,</span> <span class="n">__revision__</span><span class="p">))</span>
+        <span class="k">return</span> <span class="mi">0</span>
+
+</div></div>
+<span class="k">def</span> <span class="nf">setup_opt_parser</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Setup the optparser</span>
+
+<span class="sd">    @returns: opt_parser.OptionParser</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#pylint: disable-msg=C0301</span>
+    <span class="c">#line too long</span>
+
+    <span class="n">usage</span> <span class="o">=</span> <span class="s">&quot;usage: %prog [options]&quot;</span>
+    <span class="n">opt_parser</span> <span class="o">=</span> <span class="n">optparse</span><span class="o">.</span><span class="n">OptionParser</span><span class="p">(</span><span class="n">usage</span><span class="o">=</span><span class="n">usage</span><span class="p">)</span>
+
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--version&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span>
+                          <span class="s">&quot;jindo_version&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span>
+                          <span class="s">&quot;Show jindo version and exit.&quot;</span><span class="p">)</span>
+
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;--debug&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span>
+                          <span class="s">&quot;debug&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span>
+                          <span class="s">&quot;Show debugging information.&quot;</span><span class="p">)</span>
+
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-q&quot;</span><span class="p">,</span> <span class="s">&quot;--quiet&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span>
+                          <span class="s">&quot;quiet&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span>
+                          <span class="s">&quot;Show less output.&quot;</span><span class="p">)</span>
+
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-f&quot;</span><span class="p">,</span> <span class="s">&quot;--format&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span>
+                          <span class="n">dest</span><span class="o">=</span><span class="s">&quot;format&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="s">&quot;text&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span> <span class="s">&quot;json OR text (default)&quot;</span><span class="p">)</span>
+
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-d&quot;</span><span class="p">,</span> <span class="s">&quot;--get-service-details&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span>
+                          <span class="n">dest</span><span class="o">=</span><span class="s">&quot;service&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span> <span class="s">&quot;Get details for a service.&quot;</span><span class="p">)</span>
+
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-i&quot;</span><span class="p">,</span> <span class="s">&quot;--service-ids&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span>
+                          <span class="n">dest</span><span class="o">=</span><span class="s">&quot;service_ids&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span>
+                          <span class="s">&quot;Get list of all services for your account.&quot;</span><span class="p">)</span>
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-r&quot;</span><span class="p">,</span> <span class="s">&quot;--reboot&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span>
+                          <span class="n">dest</span><span class="o">=</span><span class="s">&quot;reboot&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&quot;SERVICE&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span> <span class="s">&quot;Reboot your server for service number SERVICE.&quot;</span><span class="p">)</span>
+    <span class="n">opt_parser</span><span class="o">.</span><span class="n">add_option</span><span class="p">(</span><span class="s">&quot;-a&quot;</span><span class="p">,</span> <span class="s">&quot;--addspace&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store&#39;</span><span class="p">,</span>
+                          <span class="n">dest</span><span class="o">=</span><span class="s">&quot;diskspace&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&quot;SERVICE&quot;</span><span class="p">,</span>
+                          <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;Add 1GB of disk space for 6 hours for service number SERVICE.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">opt_parser</span>
+
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Let&#39;s do it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">my_jindo</span> <span class="o">=</span> <span class="n">Jindo</span><span class="p">()</span>
+    <span class="n">my_jindo</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/mt.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">Jindo v0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Rob Cakebread.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+    </div>
+  </body>
+</html>

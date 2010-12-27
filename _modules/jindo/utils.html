@@ -1,0 +1,131 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>jindo.utils &mdash; Jindo v0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Jindo v0.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../../index.html">Jindo v0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for jindo.utils</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">utils.py</span>
+<span class="sd">===========</span>
+
+<span class="sd">Misc funcitions</span>
+<span class="sd">---------------</span>
+
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">__docformat__</span> <span class="o">=</span> <span class="s">&#39;restructuredtext&#39;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="k">def</span> <span class="nf">blue</span><span class="p">(</span><span class="n">my_string</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;TODO: Find some simple coloring function/lib&#39;&#39;&#39;</span>
+<div class="viewcode-block" id="blue"><a class="viewcode-back" href="../../index.html#jindo.utils.blue">[docs]</a>    <span class="k">return</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[0;34m</span><span class="si">%s</span><span class="se">\033</span><span class="s">[0m&#39;</span> <span class="o">%</span> <span class="n">my_string</span>
+
+<span class="k">def</span> <span class="nf">get_rc_file</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="get_rc_file"><a class="viewcode-back" href="../../index.html#jindo.utils.get_rc_file">[docs]</a><span class="sd">    Return location we store config files and data</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rcpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">/.jindorc&quot;</span> <span class="o">%</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="s">&quot;~&quot;</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">rcpath</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">open</span><span class="p">(</span><span class="n">rcpath</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="k">print</span> <span class="s">&quot;Create ~/.jindorc and put this in it: api_key=YOUR API KEY&quot;</span>
+    <span class="k">print</span> <span class="s">&quot;You can find your (mt) API key here: https://ac.mediatemple.net/api/index.mt&quot;</span>
+
+<span class="k">def</span> <span class="nf">sinsert</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">new</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Inserts new string inside original string at pos&#39;&#39;&#39;</span></div>
+<div class="viewcode-block" id="sinsert"><a class="viewcode-back" href="../../index.html#jindo.utils.sinsert">[docs]</a>    <span class="k">return</span> <span class="n">original</span><span class="p">[:</span><span class="n">pos</span><span class="p">]</span> <span class="o">+</span> <span class="n">new</span> <span class="o">+</span> <span class="n">original</span><span class="p">[</span><span class="n">pos</span><span class="p">:]</span>
+
+
+<span class="k">def</span> <span class="nf">camel_to_human</span><span class="p">(</span><span class="n">original</span><span class="p">):</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span></div>
+<div class="viewcode-block" id="camel_to_human"><a class="viewcode-back" href="../../index.html#jindo.utils.camel_to_human">[docs]</a>    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">original</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
+            <span class="n">original</span> <span class="o">=</span> <span class="n">sinsert</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="s">&quot; &quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">original</span> <span class="o">=</span> <span class="n">original</span><span class="o">.</span><span class="n">capitalize</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">blue</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/mt.png" alt="Logo"/>
+            </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../../index.html">Jindo v0.0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2010, Rob Cakebread.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+.. Jindo documentation master file, created by
+   sphinx-quickstart on Thu Dec 23 13:45:42 2010.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+
+Jindo API/CLI Documentation
+===========================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+
+Usage
+-----
+
+Using the jindolib library:
+
+In your own application, add:
+
+.. sourcecode:: python
+
+  import jindolib
+
+
+
+Using the command-line tool:
+
+  jindo -l
+
+
+Instalation
+-----------
+It's as easy as::
+
+  sudo easy_install jindo
+
+
+Or if you wish to install current trunk::
+
+  sudo easy_install http://github.com/cakebread/p/jindo/trunk
+
+
+
+
+API
+---
+
+jindolib
+________
+
+.. autofunction:: jindo.jindolib.print_service_details
+.. autofunction:: jindo.jindolib.print_response_details
+.. autofunction:: jindo.jindolib.add_temp_diskspace
+.. autofunction:: jindo.jindolib.reboot_server
+.. autofunction:: jindo.jindolib.fetch_services
+.. autofunction:: jindo.jindolib.fetch_service_details
+.. autofunction:: jindo.jindolib.parse_service
+.. autofunction:: jindo.jindolib.parse_json
+
+
+cli
+___
+
+.. autoclass:: jindo.cli.Jindo
+.. automethod:: jindo.cli.Jindo.__init__
+.. automethod:: jindo.cli.Jindo.set_log_level
+.. automethod:: jindo.cli.Jindo.get_service_details
+.. automethod:: jindo.cli.Jindo.get_services
+.. automethod:: jindo.cli.Jindo.reboot_server
+.. automethod:: jindo.cli.Jindo.add_diskspace
+.. automethod:: jindo.cli.Jindo.run
+.. automethod:: jindo.cli.Jindo.jindo_version
+
+utils
+_____
+
+.. autofunction:: jindo.utils.blue
+.. autofunction:: jindo.utils.get_rc_file
+.. autofunction:: jindo.utils.sinsert
+.. autofunction:: jindo.utils.camel_to_human
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+
